@@ -16,10 +16,11 @@ const (
 	usage = `Snobs 1.0
 
 Usage:
-	snobs [options]
+    snobs [options]
 
 Options:
-	-c <config>   use specified configuration file
+    -c <config>   use specified configuration file
+                  [default: /etc/snobs/snobs.conf].
 `
 )
 
