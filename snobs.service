@@ -1,0 +1,9 @@
+[Unit]
+Description=Service for adding snobs to pull-requests
+
+[Service]
+ExecStart=/usr/bin/snobs
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
