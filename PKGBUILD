@@ -36,6 +36,7 @@ build() {
 package() {
     mkdir -p "$pkgdir/etc/snobs/"
     mkdir -p "$pkgdir/usr/bin"
+    mkdir -p "$pkgdir/etc/systemd/system"
 
     chmod 0600 "$pkgdir/etc/snobs/"
 
