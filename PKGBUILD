@@ -37,6 +37,6 @@ package() {
     mkdir -p "$pkgdir/etc/snobs/"
     mkdir -p "$pkgdir/usr/bin"
 
-    cp "$srcdir/snobs.conf" "$pkgdir/etc/snobs/"
+    cp "$srcdir/.go/src/$pkgname/snobs.conf" "$pkgdir/etc/snobs/"
     cp "$srcdir/.go/bin/$pkgname" "$pkgdir/usr/bin"
 }
