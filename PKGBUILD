@@ -7,8 +7,8 @@ arch=('i686' 'x86_64')
 license=('GPL')
 makedepends=('go')
 
-source=("git://github.com/reconquest/snobs.git")
-md5sums=('SKIP')
+source=("git://github.com/reconquest/snobs.git" "snobs.service")
+md5sums=('SKIP' 'SKIP')
 backup=()
 
 pkgver() {
