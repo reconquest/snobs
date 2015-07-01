@@ -112,6 +112,11 @@ func (server *SnobServer) SetConfig(config zhash.Hash) error {
 		}
 	}
 
+	_, err := config.GetStringSlice("intersect")
+	if err != nil {
+		return err
+	}
+
 	server.config = config
 
 	return nil
@@ -141,11 +146,13 @@ func (server *SnobServer) ServeHTTP(
 	}
 
 	var (
-		usersGroup     = uriParts[0]
+		userGroup      = uriParts[0]
 		pullRequestURL = uriParts[1]
+
+		intersectGroups, _ = server.config.GetStringSlice("intersect")
 	)
 
-	users, err := server.GetUsers(usersGroup)
+	users, err := server.GetUsersIntersection(userGroup, intersectGroups)
 	if err != nil {
 		http.Error(response, err.Error(), http.StatusBadRequest)
 		return
@@ -271,4 +278,48 @@ func getReviewers(users []string, ignoreUsers []string) []map[string]interface{}
 	}
 
 	return reviewers
+}
+
+func (server *SnobServer) GetUsersIntersection(
+	targetGroup string, intersectGroups []string,
+) ([]string, error) {
+	targetUsers, err := server.GetUsers(targetGroup)
+	if err != nil {
+		return []string{}, err
+	}
+
+	intersectUsers := []string{}
+	for _, group := range intersectGroups {
+		groupUsers, err := server.GetUsers(group)
+		if err != nil {
+			return []string{}, err
+		}
+
+		intersectUsers = append(intersectUsers, groupUsers...)
+	}
+
+	return getIntersection(targetUsers, intersectUsers), nil
+}
+
+func getIntersection(original []string, other []string) []string {
+	intersection := []string{}
+
+	for _, origItem := range original {
+		for _, otherItem := range other {
+			if origItem == otherItem {
+				exists := false
+				for _, interItem := range intersection {
+					if origItem == interItem {
+						exists = true
+						break
+					}
+				}
+				if !exists {
+					intersection = append(intersection, origItem)
+				}
+			}
+		}
+	}
+
+	return intersection
 }
