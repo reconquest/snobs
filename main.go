@@ -8,7 +8,7 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/bndr/gopencils"
-	"github.com/docopt/docopt-go"
+	"github.com/docopt/docopt.go"
 	"github.com/zazab/zhash"
 )
 
@@ -136,6 +136,8 @@ func (server *SnobServer) ListenHTTP() error {
 func (server *SnobServer) ServeHTTP(
 	response http.ResponseWriter, request *http.Request,
 ) {
+	log.Printf("%s: %s", request.RemoteAddr, request.URL.Path)
+
 	uriParts := strings.SplitN(
 		strings.Trim(request.URL.Path, "/"),
 		"/", 2,
