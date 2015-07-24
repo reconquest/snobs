@@ -9,7 +9,7 @@ makedepends=('go')
 
 source=("git://github.com/reconquest/snobs.git" "snobs.service")
 md5sums=('SKIP' 'SKIP')
-backup=()
+backup=("etc/snobs/snobs.conf")
 
 pkgver() {
     cd "${pkgname}"
