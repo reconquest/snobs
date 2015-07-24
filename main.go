@@ -8,7 +8,7 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/bndr/gopencils"
-	"github.com/docopt/docopt.go"
+	"github.com/docopt/docopt-go"
 	"github.com/zazab/zhash"
 )
 
@@ -184,7 +184,7 @@ func (server *SnobServer) ServeHTTP(
 func (server *SnobServer) GetUsers(group string) ([]string, error) {
 	request, err := server.api.Res(
 		"admin/groups/more-members", &ResponseUsers{},
-	).Get(map[string]string{"context": group})
+	).Get(map[string]string{"context": group, "limit": "99999"})
 
 	if err != nil {
 		return []string{}, nil
@@ -290,6 +290,10 @@ func (server *SnobServer) GetUsersIntersection(
 		return []string{}, err
 	}
 
+	log.Printf(
+		"[%s]: %s", targetGroup, strings.Join(targetUsers, ", "),
+	)
+
 	intersectUsers := []string{}
 	for _, group := range intersectGroups {
 		groupUsers, err := server.GetUsers(group)
@@ -297,10 +301,21 @@ func (server *SnobServer) GetUsersIntersection(
 			return []string{}, err
 		}
 
+		log.Printf(
+			"[%s]: %s", group, strings.Join(groupUsers, ", "),
+		)
+
 		intersectUsers = append(intersectUsers, groupUsers...)
+
 	}
 
-	return getIntersection(targetUsers, intersectUsers), nil
+	users := getIntersection(targetUsers, intersectUsers)
+
+	log.Printf(
+		"[intersection]: %s", strings.Join(users, ", "),
+	)
+
+	return users, nil
 }
 
 func getIntersection(original []string, other []string) []string {
