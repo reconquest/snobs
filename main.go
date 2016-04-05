@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 	"regexp"
@@ -35,6 +36,7 @@ var (
 type SnobServer struct {
 	config zhash.Hash
 	api    *gopencils.Resource
+	cache  map[string][]string
 }
 
 type ResponseUsers struct {
@@ -80,6 +82,7 @@ func main() {
 
 func NewSnobServer(config zhash.Hash) (*SnobServer, error) {
 	server := &SnobServer{}
+	server.cache = map[string][]string{}
 
 	err := server.SetConfig(config)
 	if err != nil {
@@ -142,19 +145,26 @@ func (server *SnobServer) ServeHTTP(
 		strings.Trim(request.URL.Path, "/"),
 		"/", 2,
 	)
-	if len(uriParts) < 2 {
-		http.Error(response, "%group%/%pull-request%", http.StatusBadRequest)
-		return
+
+	switch len(uriParts) {
+	case 2:
+		server.handleAddReviewers(response, request, uriParts[0], uriParts[1])
+
+	case 1:
+		server.handleGetUsers(response, request, uriParts[0])
+
+	default:
+		http.Error(response, "%group%(/%pull-request%)?", http.StatusBadRequest)
 	}
+}
 
-	var (
-		userGroup      = uriParts[0]
-		pullRequestURL = uriParts[1]
+func (server *SnobServer) handleAddReviewers(
+	response http.ResponseWriter, request *http.Request,
+	usergroup, pullRequestURL string,
+) {
+	intersectGroups, _ := server.config.GetStringSlice("intersect")
 
-		intersectGroups, _ = server.config.GetStringSlice("intersect")
-	)
-
-	users, err := server.GetUsersIntersection(userGroup, intersectGroups)
+	users, err := server.GetUsersIntersection(usergroup, intersectGroups)
 	if err != nil {
 		http.Error(response, err.Error(), http.StatusBadRequest)
 		return
@@ -178,7 +188,32 @@ func (server *SnobServer) ServeHTTP(
 		return
 	}
 
-	http.Error(response, "reviewers added", http.StatusOK)
+	http.Error(response, `{"success:true}`, http.StatusOK)
+}
+
+func (server *SnobServer) handleGetUsers(
+	response http.ResponseWriter, request *http.Request, usergroup string,
+) {
+	users, ok := server.cache[usergroup]
+	if !ok {
+		var err error
+		users, err = server.GetUsers(usergroup)
+		if err != nil {
+			http.Error(response, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		if len(users) > 0 {
+			server.cache[usergroup] = users
+		}
+	}
+
+	err := json.NewEncoder(response).Encode(users)
+	if err != nil {
+		http.Error(response, err.Error(), http.StatusInternalServerError)
+	}
+
+	response.WriteHeader(http.StatusOK)
 }
 
 func (server *SnobServer) GetUsers(group string) ([]string, error) {
