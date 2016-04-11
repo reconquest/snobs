@@ -188,7 +188,7 @@ func (server *SnobServer) handleAddReviewers(
 		return
 	}
 
-	http.Error(response, `{"success:true}`, http.StatusOK)
+	http.Error(response, `{"success":true}`, http.StatusOK)
 }
 
 func (server *SnobServer) handleGetUsers(
